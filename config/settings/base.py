@@ -39,7 +39,9 @@ INSTALLED_APPS = [
     # local apps
     "accounts",
     "organizations",
+    "common",
     "monitoring",
+    "apis",
 ]
 
 

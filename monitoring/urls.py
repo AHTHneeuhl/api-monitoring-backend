@@ -1,7 +1,8 @@
-from rest_framework.routers import DefaultRouter
-from .views import MonitoredAPIViewSet
+# monitoring/urls.py
 
-router = DefaultRouter()
-router.register(r"apis", MonitoredAPIViewSet, basename="apis")
+from django.urls import path
+from .views import APILogListView
 
-urlpatterns = router.urls
+urlpatterns = [
+    path("logs/", APILogListView.as_view(), name="api-logs"),
+]

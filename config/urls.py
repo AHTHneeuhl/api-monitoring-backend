@@ -1,17 +1,27 @@
+# config/urls.py
+
 from django.contrib import admin
 from django.urls import path, include
+
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
 
+    # Authentication
     path("api/auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    
     path("api/auth/register/", include("accounts.urls")),
+
+    # Organizations (multi-tenancy)
     path("api/org/", include("organizations.urls")),
+
+    # API monitoring results / analytics
     path("api/monitoring/", include("monitoring.urls")),
+
+    # Registered APIs
+    path("api/apis/", include("apis.urls")),
 ]

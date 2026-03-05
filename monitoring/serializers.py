@@ -1,49 +1,33 @@
+# monitoring/serializers.py
+
 from rest_framework import serializers
-from .models import MonitoredAPI
-from organizations.services import get_api_limit_for_org
+from monitoring.models import APILog
 
 
-class MonitoredAPISerializer(serializers.ModelSerializer):
+class APILogSerializer(serializers.ModelSerializer):
     """
-    Handles validation and plan-based enforcement.
+    Serializer for raw API monitoring logs.
     """
 
     class Meta:
-        model = MonitoredAPI
-        fields = "__all__"
-        read_only_fields = ("id", "organization", "created_at")
+        model = APILog
+        fields = [
+            "id",
+            "monitored_api",
+            "status_code",
+            "response_time_ms",
+            "is_success",
+            "error_message",
+            "checked_at",
+        ]
+        read_only_fields = fields
 
-    def validate_check_interval_seconds(self, value):
-        """
-        Prevent too aggressive monitoring on free plan.
-        """
-        request = self.context["request"]
-        org = request.organization
 
-        if org.plan == "FREE" and value < 300:
-            raise serializers.ValidationError(
-                "Free plan minimum interval is 300 seconds."
-            )
+class APIMetricsSerializer(serializers.Serializer):
+    """
+    Serializer for aggregated monitoring metrics.
+    """
 
-        return value
-
-    def validate(self, attrs):
-        """
-        Enforce plan-based API count limits.
-        """
-        request = self.context["request"]
-        org = request.organization
-
-        if self.instance is None:  # Only on create
-            current_count = MonitoredAPI.objects.filter(
-                organization=org
-            ).count()
-
-            max_allowed = get_api_limit_for_org(org)
-
-            if current_count >= max_allowed:
-                raise serializers.ValidationError(
-                    "API limit reached for your subscription plan."
-                )
-
-        return attrs
+    total_checks = serializers.IntegerField()
+    success_rate = serializers.FloatField()
+    avg_response_time = serializers.FloatField()
