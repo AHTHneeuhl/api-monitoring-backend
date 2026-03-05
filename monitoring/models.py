@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.utils import timezone
 from common.models import TenantAwareModel
 
 
@@ -47,3 +48,36 @@ class MonitoredAPI(TenantAwareModel):
 
     def __str__(self):
         return f"{self.name} - {self.base_url}"
+
+
+class APILog(models.Model):
+    """
+    Stores monitoring results for each API request check.
+    This table will grow very large, so indexing is critical.
+    """
+
+    monitored_api = models.ForeignKey(
+        "apis.MonitoredAPI",
+        on_delete=models.CASCADE,
+        related_name="logs",
+    )
+
+    status_code = models.IntegerField()
+
+    response_time_ms = models.IntegerField()
+
+    is_success = models.BooleanField(default=False)
+
+    error_message = models.TextField(null=True, blank=True)
+
+    checked_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["monitored_api"]),
+            models.Index(fields=["checked_at"]),
+            models.Index(fields=["monitored_api", "checked_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.monitored_api} - {self.status_code}"
