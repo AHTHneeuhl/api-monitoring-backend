@@ -14,9 +14,7 @@ from monitoring.models import APILog
 def dispatch_monitoring_tasks():
     """
     Scheduler task.
-
-    This task finds all active APIs and
-    dispatches monitoring jobs to Celery workers.
+    Finds active APIs and dispatches monitoring jobs.
     """
 
     apis = MonitoredAPI.objects.filter(is_active=True).values_list("id", flat=True)
@@ -26,15 +24,9 @@ def dispatch_monitoring_tasks():
 
 
 @shared_task
-def check_api_health(api_id: int):
+def check_api_health(api_id):
     """
-    Checks a single API endpoint.
-
-    Steps:
-    1. Fetch API
-    2. Send HTTP request
-    3. Measure response time
-    4. Store APILog
+    Checks a single API endpoint and stores result.
     """
 
     try:
@@ -45,7 +37,12 @@ def check_api_health(api_id: int):
     start_time = time.time()
 
     try:
-        response = requests.get(api.url, timeout=10)
+        response = requests.request(
+            method=api.method,
+            url=api.base_url,
+            headers=api.headers or {},
+            timeout=api.timeout_seconds,
+        )
 
         response_time = int((time.time() - start_time) * 1000)
 
@@ -53,7 +50,7 @@ def check_api_health(api_id: int):
             monitored_api=api,
             status_code=response.status_code,
             response_time_ms=response_time,
-            is_success=response.status_code < 500,
+            is_success=response.status_code == api.expected_status,
             checked_at=timezone.now(),
         )
 

@@ -12,11 +12,15 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
 
 
+# Celery timezone
+app.conf.timezone = "UTC"
+
+
 # Celery Beat Schedule
 app.conf.beat_schedule = {
     "monitor-apis-every-60-seconds": {
         "task": "monitoring.tasks.dispatch_monitoring_tasks",
-        "schedule": 60.0,  # every 60 seconds
+        "schedule": 60.0,
     },
 }
 

@@ -32,6 +32,8 @@ services:
     depends_on:
       - redis
       - db
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.local
 
   celery_beat:
     build: .
@@ -39,6 +41,8 @@ services:
     depends_on:
       - redis
       - db
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.local
 
 volumes:
   postgres_data:
